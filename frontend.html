@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRM Smart Parking System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .header-text h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header-text p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Main Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            height: calc(100vh - 140px);
+        }
+
+        /* Map Section */
+        .map-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .map-header h2 {
+            color: #333;
+            font-size: 18px;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .map-container {
+            width: 100%;
+            height: calc(100% - 60px);
+            background: #f0f2f5;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mock-map {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #f0f2f5 25%, #e8eaf6 25%, #e8eaf6 50%, #f0f2f5 50%, #f0f2f5 75%, #e8eaf6 75%);
+            background-size: 40px 40px;
+            position: relative;
+        }
+
+        .parking-zones {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .zone {
+            position: absolute;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .zone:hover {
+            transform: scale(1.05);
+        }
+
+        .zone-a { background: #2ed573; top: 20%; left: 15%; width: 120px; height: 80px; }
+        .zone-b { background: #ffa726; top: 40%; left: 40%; width: 100px; height: 60px; }
+        .zone-c { background: #ff6b35; top: 60%; left: 20%; width: 110px; height: 70px; }
+        .zone-d { background: #667eea; top: 30%; left: 65%; width: 90px; height: 90px; }
+
+        .zone-info {
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Right Panel */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* User Selection */
+        .user-selection {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-selection h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .user-types {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .user-type {
+            padding: 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-type:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .user-type.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .user-type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .faculty-icon { background: #667eea; }
+        .student-icon { background: #2ed573; }
+        .visitor-icon { background: #ffa726; }
+
+        .user-type-info h4 {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .user-type-info p {
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* Slot Request Form */
+        .slot-request {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            flex-grow: 1;
+        }
+
+        .slot-request h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .request-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .request-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .available { color: #2ed573; }
+        .occupied { color: #ff6b35; }
+        .reserved { color: #ffa726; }
+        .maintenance { color: #ff4757; }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: 400px 1fr;
+            }
+            
+            .right-panel {
+                flex-direction: row;
+                gap: 15px;
+            }
+            
+            .user-selection, .slot-request {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .right-panel {
+                flex-direction: column;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .stats-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">SRM</div>
+                <div class="header-text">
+                    <h1>Smart Parking System</h1>
+                    <p>Real-time parking management for SRM Campus</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <div style="color: #333; font-weight: 500;">Welcome, User!</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Map Section -->
+            <div class="map-section">
+                <div class="map-header">
+                    <h2><i class="fas fa-map-marked-alt"></i> Campus Parking Map</h2>
+                    <div class="map-controls">
+                        <button class="control-btn" onclick="refreshMap()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="control-btn" onclick="toggleView()">
+                            <i class="fas fa-layer-group"></i> 3D View
+                        </button>
+                        <button class="control-btn" onclick="findRoute()">
+                            <i class="fas fa-route"></i> Navigate
+                        </button>
+                    </div>
+                </div>
+                <div class="map-container">
+                    <div class="mock-map">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Loading map...
+                        </div>
+                        <div class="parking-zones">
+                            <div class="zone zone-a" onclick="selectZone('A')">
+                                <div class="zone-info">
+                                    <div>Zone A</div>
+                                    <div style="font-size: 10px;">Faculty</div>
+                                    <div style="font-size: 10px;">12/20 slots</div>
+                                </div>
+                            </div>
+                            <div class="zone zone-b" onclick="selectZone('B')">
+                                <div class="zone-info">
+                                    <div>Zone B</div>
+                                    <div style="font-size: 10px;">Students</div>
+                                    <div style="font-size: 10px;">45/80 slots</div>
+                                </div>
+                            </div>
+                            <div class="zone zone-c" onclick="selectZone('C')">
+                                <div class="zone-info">
+                                    <div>Zone C</div>
+                                    <div style="font-size: 10px;">Visitors</div>
+                                    <div style="font-size: 10px;">8/15 slots</div>
+                                </div>
+                            </div>
+                            <div class="zone zone-d" onclick="selectZone('D')">
+                                <div class="zone-info">
+                                    <div>Zone D</div>
+                                    <div style="font-size: 10px;">Mixed</div>
+                                    <div style="font-size: 10px;">23/40 slots</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- User Selection -->
+                <div class="user-selection">
+                    <h3><i class="fas fa-user-tag"></i> Select User Type</h3>
+                    <div class="user-types">
+                        <div class="user-type active" onclick="selectUserType('faculty')">
+                            <div class="user-type-icon faculty-icon">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="user-type-info">
+                                <h4>Faculty/Staff</h4>
+                                <p>Priority parking access</p>
+                            </div>
+                        </div>
+                        <div class="user-type" onclick="selectUserType('student')">
+                            <div class="user-type-icon student-icon">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <div class="user-type-info">
+                                <h4>Student</h4>
+                                <p>Standard parking rates</p>
+                            </div>
+                        </div>
+                        <div class="user-type" onclick="selectUserType('visitor')">
+                            <div class="user-type-icon visitor-icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <div class="user-type-info">
+                                <h4>Visitor</h4>
+                                <p>Temporary parking access</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slot Request Form -->
+                <div class="slot-request">
+                    <h3><i class="fas fa-parking"></i> Request Parking Slot</h3>
+                    <form id="parkingForm">
+                        <div class="form-group">
+                            <label for="vehicleNumber">Vehicle Number</label>
+                            <input type="text" id="vehicleNumber" placeholder="TN01AB1234" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vehicleType">Vehicle Type</label>
+                            <select id="vehicleType" required>
+                                <option value="">Select vehicle type</option>
+                                <option value="car">Car</option>
+                                <option value="bike">Motorcycle</option>
+                                <option value="cycle">Bicycle</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Parking Duration</label>
+                            <div class="time-slots">
+                                <input type="time" id="startTime" required>
+                                <input type="time" id="endTime" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferredZone">Preferred Zone</label>
+                            <select id="preferredZone" required>
+                                <option value="">Auto-assign</option>
+                                <option value="A">Zone A - Faculty</option>
+                                <option value="B">Zone B - Students</option>
+                                <option value="C">Zone C - Visitors</option>
+                                <option value="D">Zone D - Mixed</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="request-btn">
+                            <i class="fas fa-search"></i> Find Available Slot
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="stats-panel">
+            <div class="stat-card">
+                <div class="stat-number available">58</div>
+                <div class="stat-label">Available Slots</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number occupied">97</div>
+                <div class="stat-label">Occupied Slots</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number reserved">15</div>
+                <div class="stat-label">Reserved Slots</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number maintenance">3</div>
+                <div class="stat-label">Under Maintenance</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserType = 'faculty';
+        let selectedZone = null;
+
+        function selectUserType(type) {
+            currentUserType = type;
+            document.querySelectorAll('.user-type').forEach(el => el.classList.remove('active'));
+            event.target.closest('.user-type').classList.add('active');
+            
+            // Update preferred zones based on user type
+            const zoneSelect = document.getElementById('preferredZone');
+            const options = zoneSelect.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (type === 'faculty' && option.value === 'B') {
+                    option.disabled = false;
+                } else if (type === 'student' && option.value === 'A') {
+                    option.disabled = false;
+                } else if (type === 'visitor' && option.value === 'C') {
+                    option.disabled = false;
+                } else {
+                    option.disabled = false;
+                }
+            });
+        }
+
+        function selectZone(zone) {
+            selectedZone = zone;
+            document.getElementById('preferredZone').value = zone;
+            
+            // Highlight selected zone
+            document.querySelectorAll('.zone').forEach(el => {
+                el.style.border = 'none';
+            });
+            document.querySelector(`.zone-${zone.toLowerCase()}`).style.border = '3px solid #fff';
+            
+            // Show zone details
+            showZoneDetails(zone);
+        }
+
+        function showZoneDetails(zone) {
+            const details = {
+                'A': { name: 'Faculty Zone', available: 8, total: 20, rate: 'Free' },
+                'B': { name: 'Student Zone', available: 35, total: 80, rate: '₹20/day' },
+                'C': { name: 'Visitor Zone', available: 7, total: 15, rate: '₹50/day' },
+                'D': { name: 'Mixed Zone', available: 17, total: 40, rate: 'Variable' }
+            };
+            
+            alert(`Zone ${zone} - ${details[zone].name}\nAvailable: ${details[zone].available}/${details[zone].total}\nRate: ${details[zone].rate}`);
+        }
+
+        function refreshMap() {
+            const loading = document.querySelector('.loading');
+            loading.style.display = 'block';
+            
+            setTimeout(() => {
+                loading.style.display = 'none';
+                // Update zone availability (simulate real-time data)
+                updateZoneData();
+            }, 2000);
+        }
+
+        function updateZoneData() {
+            const zones = document.querySelectorAll('.zone');
+            zones.forEach(zone => {
+                const availableSlots = Math.floor(Math.random() * 20) + 5;
+                const totalSlots = Math.floor(Math.random() * 30) + 20;
+                const info = zone.querySelector('.zone-info');
+                const lines = info.children;
+                if (lines[2]) {
+                    lines[2].textContent = `${availableSlots}/${totalSlots} slots`;
+                }
+            });
+        }
+
+        function toggleView() {
+            alert('3D View feature coming soon!');
+        }
+
+        function findRoute() {
+            if (selectedZone) {
+                alert(`Navigating to Zone ${selectedZone}...\nEstimated time: 3 minutes\nDistance: 200 meters`);
+            } else {
+                alert('Please select a parking zone first');
+            }
+        }
+
+        document.getElementById('parkingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                vehicleNumber: document.getElementById('vehicleNumber').value,
+                vehicleType: document.getElementById('vehicleType').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                preferredZone: document.getElementById('preferredZone').value,
+                userType: currentUserType
+            };
+
+            // Simulate slot assignment
+            setTimeout(() => {
+                const assignedSlot = Math.floor(Math.random() * 100) + 1;
+                const assignedZone = formData.preferredZone || ['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)];
+                
+                alert(`Parking Slot Assigned!\n\nSlot: ${assignedZone}-${assignedSlot}\nVehicle: ${formData.vehicleNumber}\nDuration: ${formData.startTime} to ${formData.endTime}\nRate: ${getRateByUserType(currentUserType)}\n\nPlease proceed to Zone ${assignedZone}`);
+                
+                // Reset form
+                this.reset();
+                
+                // Update stats
+                updateStats();
+            }, 1000);
+        });
+
+        function getRateByUserType(userType) {
+            const rates = {
+                'faculty': 'Free',
+                'student': '₹20/day',
+                'visitor': '₹50/day'
+            };
+            return rates[userType] || 'Variable';
+        }
+
+        function updateStats() {
+            // Simulate real-time stats update
+            const stats = document.querySelectorAll('.stat-number');
+            stats[0].textContent = Math.floor(Math.random() * 70) + 30; // Available
+            stats[1].textContent = Math.floor(Math.random() * 100) + 50; // Occupied
+            stats[2].textContent = Math.floor(Math.random() * 20) + 10; // Reserved
+            stats[3].textContent = Math.floor(Math.random() * 5) + 1; // Maintenance
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default times
+            const now = new Date();
+            const startTime = new Date(now.getTime() + 30 * 60000); // 30 minutes from now
+            const endTime = new Date(now.getTime() + 4 * 60 * 60000); // 4 hours from now
+            
+            document.getElementById('startTime').value = startTime.toTimeString().slice(0, 5);
+            document.getElementById('endTime').value = endTime.toTimeString().slice(0, 5);
+            
+            // Update stats periodically
+            setInterval(updateStats, 30000); // Every 30 seconds
+        });
+    </script>
+</body>
+</html>
