@@ -1,0 +1,123 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <Servo.h>
+#include <SPI.h>
+#include <MFRC522.h>
+
+#define SS_PIN 10
+#define RST_PIN 9
+#define servoPin 2
+
+MFRC522 rfid(SS_PIN, RST_PIN);
+Servo myservo;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+int IR1 = 4;
+int IR2 = 3;
+int Slot = 4;
+const int MaxSlots = 4;
+bool carEntering = false;
+bool carExiting = false;
+
+void setup() {
+  Serial.begin(9600);
+  lcd.init();
+  lcd.backlight();
+  pinMode(IR1, INPUT);
+  pinMode(IR2, INPUT);
+  myservo.attach(servoPin);
+  myservo.write(100);
+  SPI.begin();
+  rfid.PCD_Init();
+
+  lcd.setCursor(0, 0);
+  lcd.print(" SMART PARKING ");
+  lcd.setCursor(0, 1);
+  lcd.print("  SYSTEM READY ");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+  // Car entering
+  if (digitalRead(IR1) == LOW && !carEntering && !carExiting) {
+    carEntering = true;
+    if (Slot > 0) {
+      int pass = rfunc();
+      if (pass == 1) {
+        smoothOpenGate();
+        Slot--;
+        Serial.println("EVENT: Entry");
+        Serial.println("ZONE: Zone A");
+        Serial.print("SLOTS_LEFT: ");
+        Serial.println(Slot);
+        delay(3000);
+        smoothCloseGate();
+      }
+    } else {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Parking Full");
+      delay(2000);
+    }
+    carEntering = false;
+  }
+
+  // Car exiting
+  if (digitalRead(IR2) == LOW && !carExiting && !carEntering) {
+    carExiting = true;
+    smoothOpenGate();
+    if (Slot < MaxSlots) Slot++;
+    Serial.println("EVENT: Exit");
+    Serial.println("ZONE: Zone A");
+    Serial.print("SLOTS_LEFT: ");
+    Serial.println(Slot);
+    delay(3000);
+    smoothCloseGate();
+    carExiting = false;
+  }
+
+  lcd.setCursor(0, 0);
+  lcd.print("Welcome Zone A");
+  lcd.setCursor(0, 1);
+  lcd.print("Slot Left: ");
+  lcd.print(Slot);
+}
+
+void smoothOpenGate() {
+  for (int pos = 100; pos >= 0; pos--) {
+    myservo.write(pos);
+    delay(10);
+  }
+}
+
+void smoothCloseGate() {
+  for (int pos = 0; pos <= 100; pos++) {
+    myservo.write(pos);
+    delay(10);
+  }
+}
+
+int rfunc() {
+  lcd.clear();
+  lcd.print("Scan Card...");
+  while (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) delay(100);
+
+  String ID = "";
+  for (byte i = 0; i < rfid.uid.size; i++) {
+    if (rfid.uid.uidByte[i] < 0x10) ID += "0";
+    ID += String(rfid.uid.uidByte[i], HEX);
+    if (i < rfid.uid.size - 1) ID += " ";
+  }
+  ID.toUpperCase();
+
+  Serial.print("UID: ");
+  Serial.println(ID);
+
+  lcd.clear();
+  lcd.print("Access Granted");
+  delay(1000);
+  rfid.PICC_HaltA();
+  rfid.PCD_StopCrypto1();
+  return 1;
+}
